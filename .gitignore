@@ -1,4 +1,5 @@
 android/
 url_check/halebop.py
+pykolli/phone.py
 *.swp
 *.pyc
