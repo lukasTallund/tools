@@ -1,8 +1,20 @@
 #!/usr/bin/python3
-from pykolli import KolliId
+import argparse
 import sys
-if len(sys.argv)>1:
-    myId = KolliId(sys.argv[1])
-    print(myId.get_last_update())
-else:
-    print("Usage: {} kolli-id".format(__file__))
+
+from pykolli import KolliId
+
+def main():
+    parser = argparse.ArgumentParser(description='Search for kollid.')
+    parser.add_argument('kolliid')
+    parser.add_argument('--raw', action='store_true', default=False)
+    args = parser.parse_args()
+
+    myId = KolliId(args.kolliid)
+    if args.raw:
+        myId.print_data()
+    else:
+        myId.print_formated()
+
+if __name__ == "__main__":
+    main()

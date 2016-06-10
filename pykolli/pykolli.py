@@ -1,52 +1,50 @@
-import requests
-from bs4 import BeautifulSoup
+import urllib, json
 
-POST_URL = "http://www.posten.se/tracktrace/TrackConsignments_do.jsp" 
-POST_PARAM_DICT = {"trackntraceAction" : "saveSearch", "lang":"GB", "consignmentId": ""}
+POST_URL ="http://147.14.240.50/wsp/rest-services/ntt-service-rest/api/shipment.json?id={}&locale=en&consumerId=eb3fea65-34a0-4e10-ab0e-1f42139a72fc"
 
 class KolliId(object):
     def __init__(self, kolliid):
-        self.kolliid = kolliid
-        self.bs_object = None
-        self.page = None 
-        self.params = POST_PARAM_DICT
-        self.params["consignmentId"] = self.kolliid
-        self.update_id()
-
-    def update_id(self,kolliid=None):
-        if not kolliid:
-            kolliid = self.kolliid
-        self.page = requests.post(POST_URL, data=self.params).text
-        self.bs_object = BeautifulSoup(self.page)
+        self.response = urllib.urlopen(POST_URL.format(kolliid)).read()
+        self.data = json.loads(self.response)['TrackingInformationResponse']['shipments'][0]
     
-    def get_div_tag_value(self, tag_name):     
-        div_results = self.bs_object.find_all("div", class_=tag_name)
-        if div_results:
-            return div_results[0].string
-    
-    def get_table_row(self, row_number):
-        table_results =  self.bs_object.find_all("table")
-        if table_results:
-            table = table_results[0]
-            return table.find_all("tr")[row_number]
+    def print_data(self):
+        print(json.dumps(self.data, indent=4))
 
-    def get_table_item(self, row, position):
-        if row:
-            if len(row.find_all("td"))>position:
-                return row.find_all("td")[position].string
-
-    def get_time(self, row):
-        return self.get_table_item(row, 0)
-
-    def get_place(self, row):
-        return self.get_table_item(row, 1)
-
-    def get_last_time(self):
-        return self.get_time(self.get_table_row(1))
+    def print_formated(self):
+        print('Package from: {}'.format(self.get_from_name()))
+        print('Status: {}'.format(self.get_status_body()))
+        print('Latest event: {}'.format(self.get_event_string()))
+        #print(json.dumps(self.get_event(), indent=4))
+        #print(json.dumps(self.get_status(), indent=4))
     
-    def get_last_place(self):
-        return self.get_place(self.get_table_row(1))
+    def get_item_data(self, field, item=0):
+        return self.data['items'][item][field]
     
-    def get_last_update(self):
-        return "{}: {}".format(self.get_last_time(), self.get_last_place())
-    
+    def get_events(self):
+        return self.get_item_data('events')
+
+    def get_event(self, number=-1):
+        return self.get_events()[number]
+
+    def get_status(self):
+        return self.data['statusText']
+
+    def get_from(self):
+        return self.data['consignor']
+
+    def get_from_name(self):
+        return self.get_from()['name']
+
+    def get_status_body(self):
+        try:
+            body = self.get_status()['estimatedTimeOfArrival']
+        except KeyError:
+            body = self.get_status()['body']
+        return body
+
+    def get_event_string(self, number=-1):
+        event = self.get_event(number)
+        time = event['eventTime']
+        place = event['location']['displayName']
+        description = event['eventDescription']
+        return '{} {} {}'.format(time.encode('utf-8'), place.encode('utf-8'), description.encode('utf-8'))
