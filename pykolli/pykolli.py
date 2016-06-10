@@ -1,11 +1,12 @@
-import urllib, json
+import urllib.request, json
 
 POST_URL ="http://147.14.240.50/wsp/rest-services/ntt-service-rest/api/shipment.json?id={}&locale=en&consumerId=eb3fea65-34a0-4e10-ab0e-1f42139a72fc"
 
 class KolliId(object):
     def __init__(self, kolliid):
-        self.response = urllib.urlopen(POST_URL.format(kolliid)).read()
-        self.data = json.loads(self.response)['TrackingInformationResponse']['shipments'][0]
+        with urllib.request.urlopen(POST_URL.format(kolliid)) as url:
+            self.response = url.read()
+        self.data = json.loads(self.response.decode())['TrackingInformationResponse']['shipments'][0]
     
     def print_data(self):
         print(json.dumps(self.data, indent=4))
@@ -14,8 +15,6 @@ class KolliId(object):
         print('Package from: {}'.format(self.get_from_name()))
         print('Status: {}'.format(self.get_status_body()))
         print('Latest event: {}'.format(self.get_event_string()))
-        #print(json.dumps(self.get_event(), indent=4))
-        #print(json.dumps(self.get_status(), indent=4))
     
     def get_item_data(self, field, item=0):
         return self.data['items'][item][field]
