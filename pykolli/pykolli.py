@@ -1,4 +1,5 @@
-import urllib.request, json
+import urllib.request
+import json
 
 POST_URL ="http://147.14.240.50/wsp/rest-services/ntt-service-rest/api/shipment.json?id={}&locale=en&consumerId=eb3fea65-34a0-4e10-ab0e-1f42139a72fc"
 
@@ -9,7 +10,7 @@ class KolliId(object):
         self.data = json.loads(self.response.decode())['TrackingInformationResponse']['shipments'][0]
     
     def print_data(self):
-        print(json.dumps(self.data, indent=4))
+        print(json.dumps(self.data, indent=4, ensure_ascii=False))
 
     def print_formated(self):
         print('Package from: {}'.format(self.get_from_name()))
@@ -46,4 +47,4 @@ class KolliId(object):
         time = event['eventTime']
         place = event['location']['displayName']
         description = event['eventDescription']
-        return '{} {} {}'.format(time.encode('utf-8'), place.encode('utf-8'), description.encode('utf-8'))
+        return '{} {} {}'.format(time, place, description)
