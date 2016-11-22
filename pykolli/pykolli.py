@@ -6,8 +6,9 @@ POST_URL ="http://147.14.240.50/wsp/rest-services/ntt-service-rest/api/shipment.
 class KolliId(object):
     def __init__(self, kolliid):
         with urllib.request.urlopen(POST_URL.format(kolliid)) as url:
-            self.response = url.read()
-        self.data = json.loads(self.response.decode())['TrackingInformationResponse']['shipments'][0]
+            if url.code == 200:
+                self.response = url.read()
+                self.data = json.loads(self.response.decode())['TrackingInformationResponse']['shipments'][0]
     
     def print_data(self):
         print(json.dumps(self.data, indent=4, ensure_ascii=False))
